@@ -11,12 +11,10 @@ from mcp.server.fastmcp.prompts import base
 from mcp.types import TextContent
 from mcp import types
 
-
 # instantiate an MCP server client
 mcp = FastMCP("Writer")
 
-
-def focus_application(self, app_name):
+def focus_application(app_name):
     """Focus on a specific application by name"""
     apps = NSWorkspace.sharedWorkspace().runningApplications()
     for app in apps:
