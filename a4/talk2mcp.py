@@ -117,7 +117,7 @@ async def main():
                 
                 print("Created system prompt...")
                 
-                system_prompt = f"""You are a math agent solving problems in iterations. You have access to various mathematical tools.
+                system_prompt = f"""You are a math agent solving problems in iterations. You have access to various mathematical tools. Post calculation,you print out the result which you have calculated on a libreoffice tool. Make sure you print the result before terminating execution. For doing this you use the tools below
 
 Available tools:
 {tools_description}
@@ -126,21 +126,32 @@ You must respond with EXACTLY ONE line in one of these formats (no additional te
 1. For function calls:
    FUNCTION_CALL: function_name|param1|param2|...
    
-2. For final answers:
-   FINAL_ANSWER: [number]
-
 Important:
 - When a function returns multiple values, you need to process all of them
 - Only give FINAL_ANSWER when you have completed all necessary calculations
 - Do not repeat function calls with the same parameters
+- Once you have got the FINAL_ANSWER, your task is print the result into a libreoffice window, to achive this you will always need to use the 3 tools
+- First tool is opening the libreoffice using the tool open_libreoffice
+- Second must use tool is drawing a rectangle using the tool draw_rectangle using the parameters x1:int=550, y1:int=400, x2:int=850, y2:int=600
+- Third must use tool is print the FINAL_ANSWER in the rectangle using tool enter_text_in_rectangle
+
+## Example
+
+User - Add two numbers 8 and 13
+BOT - FUNCTION_CALL: add|5|3
+BOT - FUNCTION_CALL: open_libreoffice
+BOT - FUNCTION_CALL: draw_rectangle|550|400|850|600
+BOT - FUNCTION_CALL: enter_text_in_rectangle|21
 
 Examples:
 - FUNCTION_CALL: add|5|3
 - FUNCTION_CALL: strings_to_chars_to_int|INDIA
-- FINAL_ANSWER: [42]
+- FUNCTION_CALL: open_libreoffice
+- FUNCTION_CALL: draw_rectangle|550|400|850|600
+- FUNCTION_CALL: enter_text_in_rectangle|42
 
 DO NOT include any explanations or additional text.
-Your entire response should be a single line starting with either FUNCTION_CALL: or FINAL_ANSWER:"""
+Your entire response should be a single line starting with FUNCTION_CALL:"""
 
                 query = """Find the ASCII values of characters in INDIA and then return sum of exponentials of those values. """
                 print("Starting iteration loop...")
@@ -148,7 +159,7 @@ Your entire response should be a single line starting with either FUNCTION_CALL:
                 # Use global iteration variables
                 global iteration, last_response
                 
-                while iteration < max_iterations:
+                while iteration < max_iterations+2:
                     print(f"\n--- Iteration {iteration + 1} ---")
                     if last_response is None:
                         current_query = query
@@ -159,6 +170,7 @@ Your entire response should be a single line starting with either FUNCTION_CALL:
                     # Get model's response with timeout
                     print("Preparing to generate LLM response...")
                     prompt = f"{system_prompt}\n\nQuery: {current_query}"
+                    # print(prompt)
                     try:
                         response = await generate_with_timeout(client, prompt)
                         response_text = response.text.strip()
@@ -188,7 +200,7 @@ Your entire response should be a single line starting with either FUNCTION_CALL:
                         
                         try:
                             # Find the matching tool to get its input schema
-                            tool = next((t for t in tools if t.name == func_name), None)
+                            tool = next((t for t in tools if t.name.replace('(','').replace(')','') == func_name), None)
                             if not tool:
                                 print(f"DEBUG: Available tools: {[t.name for t in tools]}")
                                 raise ValueError(f"Unknown tool: {func_name}")
@@ -266,35 +278,35 @@ Your entire response should be a single line starting with either FUNCTION_CALL:
                             iteration_response.append(f"Error in iteration {iteration + 1}: {str(e)}")
                             break
 
-                    elif response_text.startswith("FINAL_ANSWER:"):
-                        print("\n=== Agent Execution Complete ===")
-                        result = await session.call_tool("open_paint")
-                        print(result.content[0].text)
+                    # elif response_text.startswith("FINAL_ANSWER:"):
+                    #     print("\n=== Agent Execution Complete ===")
+                    #     # result = await session.call_tool("open_paint")
+                    #     print(result.content[0].text)
 
-                        # Wait longer for Paint to be fully maximized
-                        await asyncio.sleep(1)
+                    #     # Wait longer for Paint to be fully maximized
+                    #     await asyncio.sleep(1)
 
-                        # Draw a rectangle
-                        result = await session.call_tool(
-                            "draw_rectangle",
-                            arguments={
-                                "x1": 780,
-                                "y1": 380,
-                                "x2": 1140,
-                                "y2": 700
-                            }
-                        )
-                        print(result.content[0].text)
+                    #     # Draw a rectangle
+                    #     result = await session.call_tool(
+                    #         "draw_rectangle",
+                    #         arguments={
+                    #             "x1": 780,
+                    #             "y1": 380,
+                    #             "x2": 1140,
+                    #             "y2": 700
+                    #         }
+                    #     )
+                    #     print(result.content[0].text)
 
-                        # Draw rectangle and add text
-                        result = await session.call_tool(
-                            "add_text_in_paint",
-                            arguments={
-                                "text": response_text
-                            }
-                        )
-                        print(result.content[0].text)
-                        break
+                        # # Draw rectangle and add text
+                        # result = await session.call_tool(
+                        #     "add_text_in_paint",
+                        #     arguments={
+                        #         "text": response_text
+                        #     }
+                        # )
+                        # print(result.content[0].text)
+                        # break
 
                     iteration += 1
 
