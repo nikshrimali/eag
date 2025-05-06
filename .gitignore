@@ -2,7 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
-trail.ipynb
+*trial.ipynb
 
 # C extensions
 *.so
