@@ -1,0 +1,16 @@
+markitdown
+fastmcp
+faiss-cpu
+trafilatura
+pymupdf4llm
+pydantic
+# sqlite3
+httpx
+beautifulsoup4
+PyYAML
+google-genai
+pillow
+# Google auth lib
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
